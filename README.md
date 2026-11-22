@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="<PROJECT_PAGE_URL>"><img src="https://img.shields.io/badge/Project-Page-blue" alt="Project Page"></a>
-  <a href="<WEIGHTS_URL>"><img src="https://img.shields.io/badge/Model-Weights-yellow" alt="Model"></a>
+  <a href="https://huggingface.co/ShimaRinC/Distill-to-Loop"><img src="https://img.shields.io/badge/Model-Weights-yellow" alt="Model"></a>
   <a href="https://arxiv.org/abs/<ARXIV_ID>"><img src="https://img.shields.io/badge/arXiv-<ARXIV_ID>-b31b1b" alt="arXiv"></a>
 </p>
 
@@ -29,6 +29,8 @@ Results from the paper with SD3-medium as the teacher (28 sampling steps, CFG 7,
 | D2L | 50.5 | 4 | 0.659 | 0.919 | 22.312 | 0.276 | 100.7 |
 | D2L | 92.6 | 8 | 0.648 | 0.889 | 22.278 | 0.275 | 99.3 |
 | D2L | 177.0 | 16 | 0.633 | 0.853 | 22.229 | 0.273 | 97.6 |
+
+The table is the plain distilled student, which the default config reproduces. The Hugging Face repository holds `d2l-sd3-medium` (the distilled student combined with a real-data continuation, the "Real data" rows of the paper) and `d2l-sd3-medium-turbo` (distilled from the CDM four-step teacher); see its model card.
 
 ## Getting Started
 
@@ -61,7 +63,7 @@ hf auth login
 hf download stabilityai/stable-diffusion-3-medium-diffusers
 ```
 
-With huggingface_hub older than 1.0, use `huggingface-cli download stabilityai/stable-diffusion-3-medium-diffusers`. If the teacher is missing, the scripts stop with a `FileNotFoundError` that lists these steps. The training launcher sets `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` as defaults; a value set in the environment overrides them. Student weights: `<WEIGHTS_URL>`.
+With huggingface_hub older than 1.0, use `huggingface-cli download stabilityai/stable-diffusion-3-medium-diffusers`. If the teacher is missing, the scripts stop with a `FileNotFoundError` that lists these steps. The training launcher sets `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` as defaults; a value set in the environment overrides them. Student weights: https://huggingface.co/ShimaRinC/Distill-to-Loop.
 
 Training uses COCO 2017 train at 512 px. Download `train2017.zip` and `annotations_trainval2017.zip` from https://cocodataset.org/#download; the commands use the `train2017/` image directory and `annotations/captions_train2017.json`. `scripts/prepare_coco.py` encodes one caption per image with the SD3 VAE and text encoders and writes the shards that the trainer reads. The full split (118,287 images, 119 shards) takes about 182 GB on disk. Example with 2 GPUs:
 
@@ -120,6 +122,13 @@ Export the EMA weights of a checkpoint as a student directory (`config.json` and
 python scripts/export_student.py --checkpoint "$TRAINED_CHECKPOINT" --out "$WORK/exported/sd3m_d2l_100k"
 ```
 
+`--metadata KEY=VALUE` (repeatable) adds entries to the metadata of the exported weight file, for example how the weights were averaged after training. The standard entries (`teacher_model_id`, `training_step`, `ema_decay`, `weights`) cannot be replaced.
+
+```bash
+python scripts/export_student.py --checkpoint "$TRAINED_CHECKPOINT" --out "$WORK/exported/sd3m_d2l_100k" \
+    --metadata "sampling=K 4, 28 Euler steps on the scheduler's grid, CFG 7.0, 512 px"
+```
+
 Generate images from a text file with one prompt per line. The loop count `--K` is chosen at sampling time. The defaults of `scripts/generate.py` are the released sampling setting `--K 4 --steps 28 --cfg 7.0 --size 512`. `--size` must be a multiple of 16; other sizes are rejected at argument parsing (exit status 2, `generate.py: error: --size must be a positive multiple of 16 (VAE factor 8 x patch size 2), got 520` for `--size 520`). The commands below use a smaller setting (256 px, 8 steps) and the CPU:
 
 ```bash
@@ -128,6 +137,12 @@ python scripts/generate.py --student "$WORK/exported/sd3m_d2l_100k" --prompts "$
     --K 4 --steps 8 --cfg 7.0 --size 256 --seed 0 --micro-batch 2 --device cpu
 python scripts/generate.py --student "$WORK/exported/sd3m_d2l_100k" --prompts "$WORK/prompts.txt" --out "$WORK/samples/k2" \
     --K 2 --steps 8 --cfg 7.0 --size 256 --seed 0 --micro-batch 2 --device cpu
+```
+
+`--sigmas` replaces the `--steps`-point grid of the scheduler by custom sampling sigmas, given before the scheduler's shift; the step count then equals the number of sigmas, and a conflicting `--steps` is rejected. For example, the four-step student of the Hugging Face repository is sampled with:
+
+```bash
+--K 4 --sigmas 1.0 0.75 0.5 0.25 --cfg 1.0
 ```
 
 Each run writes the images, `prompts.txt` and `generation.json` (the sampling settings and the metadata of the export) to `--out`. On a GPU, omit `--device` (it defaults to CUDA when available).
@@ -202,13 +217,13 @@ A resumed run is exact only with `data.num_workers=0`. With data loader workers 
 python -m pytest -q
 ```
 
-The suite has 45 tests and hides the GPUs itself.
+The suite has 49 tests and hides the GPUs itself.
 
 ## Related links
 
 - Teacher model: [stabilityai/stable-diffusion-3-medium-diffusers](https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers)
 - Project page: `<PROJECT_PAGE_URL>`
-- Student weights: `<WEIGHTS_URL>`
+- Student weights: `https://huggingface.co/ShimaRinC/Distill-to-Loop`
 
 ## License
 
