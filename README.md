@@ -1,7 +1,5 @@
 <h1 align="center">Distill to Loop: Turning Pretrained Diffusion Transformers into Looped Models with Adjustable Depth</h1>
 
-<p align="center">Anonymous Authors</p>
-
 <p align="center">
   <a href="<PROJECT_PAGE_URL>"><img src="https://img.shields.io/badge/Project-Page-blue" alt="Project Page"></a>
   <a href="<WEIGHTS_URL>"><img src="https://img.shields.io/badge/Model-Weights-yellow" alt="Model"></a>
@@ -221,12 +219,7 @@ The code is released under the Apache-2.0 license (see `LICENSE`). Third-party c
 ```bibtex
 @article{d2l,
   title   = {Distill to Loop: Turning Pretrained Diffusion Transformers into Looped Models with Adjustable Depth},
-  author  = {Anonymous},
   journal = {arXiv preprint arXiv:<ARXIV_ID>},
   year    = {<YEAR>}
 }
 ```
-
-## Contact
-
-Anonymous Authors, `<CONTACT>`
