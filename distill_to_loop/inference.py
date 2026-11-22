@@ -5,16 +5,17 @@ An exported student is a directory in the diffusers layout: ``config.json`` (the
 loads without the teacher transformer (:func:`load_student`) and samples inside a ``StableDiffusion3Pipeline`` built from the teacher's VAE,
 scheduler and, for text prompts, text encoders (:func:`load_pipeline`). The loop count ``K`` is the student's ``loop_rounds``.
 
-Sampling follows the evaluation protocol of the released model: FlowMatch Euler on the scheduler's ``steps``-point grid, CFG with the empty
-prompt as the negative, the initial noise of image ``(prompt p, sample s)`` a function of ``(seed, p, s)`` only
-(:func:`distill_to_loop.seeding.image_noise`), every prompt encoded once.
+Sampling follows the evaluation protocol of the released model: FlowMatch Euler on the scheduler's ``steps``-point grid (or on a custom list
+of ``sigmas``, as a few-step student samples), CFG with the empty prompt as the negative, the initial noise of image ``(prompt p, sample s)`` a
+function of ``(seed, p, s)`` only (:func:`distill_to_loop.seeding.image_noise`), every prompt encoded once.
 """
 
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 import torch
 from safetensors import safe_open
@@ -28,6 +29,7 @@ from distill_to_loop.seeding import image_noise
 WEIGHTS_NAME = "diffusion_pytorch_model.safetensors"
 CONFIG_NAME = "config.json"
 METADATA_KEY = "distill_to_loop"  # the weight file's metadata entry
+STANDARD_METADATA_KEYS = ("teacher_model_id", "training_step", "ema_decay", "weights")  # always written by export_student
 # Student options of the training config that the released architecture fixes; a recorded config holding another value is refused.
 FIXED_MODEL_FIELDS: dict[str, Any] = {
     "untie_loop": False, "loop_index_cond": False, "guidance_embed": False, "depth_embed": True, "depth_cond": True,
@@ -74,12 +76,18 @@ def student_architecture(model_cfg: dict[str, Any], teacher_cfg: dict[str, Any])
     return arch
 
 
-def export_student(checkpoint: str | Path, out_dir: str | Path, hf_cache: str | None = None) -> Path:
+def export_student(checkpoint: str | Path, out_dir: str | Path, hf_cache: str | None = None, extra_metadata: Mapping[str, str] | None = None) -> Path:
     """Write the EMA weights of a training checkpoint as an exported student into ``out_dir`` and return the weight file. The checkpoint is
     memory-mapped and never written. The weights are loaded into a student of the recorded architecture with ``strict=True`` before they are
-    written."""
+    written. ``extra_metadata`` (string keys and values, e.g. how the weights were averaged after training) is added to the file's metadata
+    next to the standard entries, which it may not replace; without it the metadata holds the standard entries only."""
     from distill_to_loop.training.checkpoint import EMA_CHECKPOINT_KEY, read_checkpoint_payload
 
+    extra_metadata = dict(extra_metadata or {})
+    if not all(isinstance(k, str) and k and isinstance(v, str) for k, v in extra_metadata.items()):
+        raise ValueError(f"extra_metadata must map non-empty strings to strings, got {extra_metadata!r}")
+    if set(extra_metadata) & set(STANDARD_METADATA_KEYS):
+        raise ValueError(f"extra_metadata may not replace the standard entries {STANDARD_METADATA_KEYS}, got {sorted(extra_metadata)}")
     payload = read_checkpoint_payload(checkpoint, map_location="cpu", mmap=True)
     extra = payload.get("extra", {})
     if EMA_CHECKPOINT_KEY not in extra:
@@ -97,6 +105,7 @@ def export_student(checkpoint: str | Path, out_dir: str | Path, hf_cache: str | 
     metadata = {
         "teacher_model_id": str(model_cfg["teacher_model_id"]), "training_step": str(int(payload["step"])),
         "ema_decay": str(extra[EMA_CHECKPOINT_KEY]["decay"]), "weights": "ema",
+        **extra_metadata,
     }
     path = out_dir / WEIGHTS_NAME
     # One metadata entry holding sorted JSON: the file header (and so the file's bytes) is then the same on every export of a checkpoint.
@@ -105,7 +114,7 @@ def export_student(checkpoint: str | Path, out_dir: str | Path, hf_cache: str | 
 
 
 def read_student_metadata(student_dir: str | Path) -> dict[str, str]:
-    """The metadata of an exported student's weight file (``teacher_model_id``, ``training_step``, ``ema_decay``, ``weights``)."""
+    """The metadata of an exported student's weight file (:data:`STANDARD_METADATA_KEYS`, plus any ``extra_metadata`` of the export)."""
     with safe_open(str(Path(student_dir) / WEIGHTS_NAME), framework="pt") as f:
         return json.loads((f.metadata() or {})[METADATA_KEY])
 
@@ -201,6 +210,18 @@ def latent_shape(student: LoopedSD3Transformer, vae: Any, resolution: int) -> tu
     return (int(student.config.in_channels), resolution // factor, resolution // factor)
 
 
+def check_sigmas(sigmas: Sequence[float]) -> list[float]:
+    """A custom sampling schedule as floats: non-empty, finite, in (0, 1] and strictly decreasing (from noise to data), else ``ValueError``.
+    These are the sigmas before the scheduler's shift: diffusers' ``set_timesteps(sigmas=...)`` shifts them (SD3-medium, shift 3:
+    1.0, 0.75, 0.5, 0.25 -> 1.0, 0.9, 0.75, 0.5) and appends 0."""
+    values = [float(s) for s in sigmas]
+    if not values or not all(math.isfinite(s) and 0.0 < s <= 1.0 for s in values):
+        raise ValueError(f"sigmas must be a non-empty list of numbers in (0, 1], got {values}")
+    if any(b >= a for a, b in zip(values, values[1:])):
+        raise ValueError(f"sigmas must be strictly decreasing (from noise to data), got {values}")
+    return values
+
+
 @torch.no_grad()
 def sample_with_encodings(
     vae: Any,
@@ -218,10 +239,18 @@ def sample_with_encodings(
     device: torch.device | str,
     micro_batch_size: int | None = None,
     output_type: str = "pil",
+    sigmas: Sequence[float] | None = None,
 ) -> list:
     """One pipeline call per micro-batch on the given encodings (rows aligned) and initial ``noise`` (``latents=``, cast to the encodings'
     dtype): FlowMatch Euler with ``steps`` steps and CFG ``cfg_scale`` (at most 1: the conditional branch only), the model under
-    :func:`~distill_to_loop.precision.student_autocast`. Returns PIL images, or latents with ``output_type="latent"``."""
+    :func:`~distill_to_loop.precision.student_autocast`. ``sigmas`` (:func:`check_sigmas`; ``steps`` must be their number) replaces the
+    scheduler's ``steps``-point grid (``pipe(..., sigmas=...)``); without it the call does not pass ``sigmas``. Returns PIL images, or latents
+    with ``output_type="latent"``."""
+    sigma_kwargs: dict[str, list[float]] = {}
+    if sigmas is not None:
+        sigma_kwargs["sigmas"] = check_sigmas(sigmas)
+        if steps != len(sigma_kwargs["sigmas"]):
+            raise ValueError(f"steps={steps} but {len(sigma_kwargs['sigmas'])} sigmas were given: with sigmas the step count is their number")
     n = prompt_embeds.shape[0]
     mb = n if micro_batch_size is None else min(micro_batch_size, n)
     results: list = []
@@ -241,6 +270,7 @@ def sample_with_encodings(
                 num_inference_steps=steps,
                 guidance_scale=float(cfg_scale),
                 output_type=output_type,
+                **sigma_kwargs,
             )
         results.extend(result.images if output_type == "pil" else list(result.images))
     return results
@@ -261,11 +291,16 @@ def generate_images(
     micro_batch_size: int = 4,
     device: str | torch.device = "cuda",
     output_type: str = "pil",
+    sigmas: Sequence[float] | None = None,
 ) -> list[tuple[int, int, Any]]:
     """``[(prompt index, sample index, image)]`` for every prompt of ``encodings`` (:func:`encode_prompts`) and sample, prompt-major. Image
     ``(p, s)`` starts from :func:`~distill_to_loop.seeding.image_noise` of ``(seed, p, s)``. Every pipeline call has exactly
     ``micro_batch_size`` rows (a short last call is padded with copies of its last row, whose images are dropped), so the batch shape does not
-    depend on the number of prompts."""
+    depend on the number of prompts. ``sigmas`` (:func:`check_sigmas`, e.g. ``[1.0, 0.75, 0.5, 0.25]`` for a four-step student) replaces the
+    scheduler's ``steps``-point grid; the step count is then their number and ``steps`` is not used (as in diffusers' pipelines)."""
+    if sigmas is not None:
+        sigmas = check_sigmas(sigmas)
+        steps = len(sigmas)
     student.loop_rounds = int(loop_rounds)
     shape = latent_shape(student, vae, resolution)
     dtype = text_dtype_for(device)
@@ -282,7 +317,7 @@ def generate_images(
             vae, scheduler_factory, student,
             encodings["prompt_embeds"][index].to(device, dtype=dtype), encodings["pooled"][index].to(device, dtype=dtype),
             negative_embeds.to(device, dtype=dtype), negative_pooled.to(device, dtype=dtype),
-            noise, steps, cfg_scale, resolution, resolution, device, output_type=output_type,
+            noise, steps, cfg_scale, resolution, resolution, device, output_type=output_type, sigmas=sigmas,
         )
         out.extend((p, s, image) for (p, s), image in zip(chunk, images))
     return out

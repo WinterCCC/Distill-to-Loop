@@ -8,6 +8,9 @@ config (local Hugging Face cache); the checkpoint is memory-mapped and never mod
 Example::
 
     python scripts/export_student.py --checkpoint checkpoints/sd3m_d2l/step_00100000.pt --out exported/sd3m_d2l_100k
+
+``--metadata KEY=VALUE`` (repeatable) adds an entry to the file metadata, e.g. how the weights were averaged after training; the standard
+entries cannot be replaced.
 """
 
 from __future__ import annotations
@@ -18,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from distill_to_loop.inference import export_student, load_student, read_student_metadata  # noqa: E402
+from distill_to_loop.inference import STANDARD_METADATA_KEYS, export_student, load_student, read_student_metadata  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -26,8 +29,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--checkpoint", required=True, help="a training checkpoint (step_XXXXXXXX.pt) with EMA weights")
     parser.add_argument("--out", required=True, help="the output directory")
     parser.add_argument("--hf-cache", default=None, help="Hugging Face hub cache holding the teacher (default: HF_HUB_CACHE)")
+    parser.add_argument("--metadata", action="append", default=[], metavar="KEY=VALUE", help="an extra entry of the file metadata (repeatable)")
     args = parser.parse_args(argv)
-    path = export_student(args.checkpoint, args.out, hf_cache=args.hf_cache)
+    extra: dict[str, str] = {}
+    for item in args.metadata:
+        key, sep, value = item.partition("=")
+        if not sep or not key:
+            parser.error(f"--metadata takes KEY=VALUE, got {item!r}")
+        if key in extra:
+            parser.error(f"--metadata names {key!r} twice")
+        if key in STANDARD_METADATA_KEYS:
+            parser.error(f"--metadata cannot replace the standard entry {key!r}")
+        extra[key] = value
+    path = export_student(args.checkpoint, args.out, hf_cache=args.hf_cache, extra_metadata=extra)
     student = load_student(args.out)  # strict reload of what was written
     n_params = sum(p.numel() for p in student.parameters())
     print(f"[export] {path} ({path.stat().st_size / 2**30:.2f} GiB); {n_params:,} parameters; metadata {read_student_metadata(args.out)}", flush=True)

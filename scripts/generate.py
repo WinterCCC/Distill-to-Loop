@@ -9,6 +9,9 @@ sampling is FlowMatch Euler with CFG, the student running ``--K`` loop rounds; i
 Example::
 
     python scripts/generate.py --student exported/sd3m_d2l_100k --prompts prompts.txt --out samples/ --K 4 --steps 28 --cfg 7.0 --size 512
+
+``--sigmas`` replaces the scheduler's ``--steps``-point grid by a custom schedule (before the scheduler's shift; the step count is their
+number), e.g. a four-step student: ``--sigmas 1.0 0.75 0.5 0.25 --cfg 1.0``.
 """
 
 from __future__ import annotations
@@ -28,6 +31,7 @@ from distill_to_loop.inference import (  # noqa: E402
     DEFAULT_LOOP_ROUNDS,
     DEFAULT_RESOLUTION,
     DEFAULT_STEPS,
+    check_sigmas,
     encode_prompts,
     generate_images,
     load_student,
@@ -53,7 +57,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--prompts", required=True, help="a text file with one prompt per line, or a .jsonl file with a 'prompt' field")
     parser.add_argument("--out", required=True, help="the output directory")
     parser.add_argument("--K", type=int, default=DEFAULT_LOOP_ROUNDS, help="loop rounds of the student (default: the trained count, 4)")
-    parser.add_argument("--steps", type=int, default=DEFAULT_STEPS, help="Euler steps")
+    parser.add_argument("--steps", type=int, default=None, help=f"Euler steps on the scheduler's grid (default: {DEFAULT_STEPS}; with --sigmas their number)")
+    parser.add_argument("--sigmas", type=float, nargs="+", default=None, help="custom decreasing sigmas in (0, 1] before the scheduler's shift, "
+                        "e.g. 1.0 0.75 0.5 0.25 (default: the scheduler's grid)")
     parser.add_argument("--cfg", type=float, default=DEFAULT_CFG_SCALE, help="CFG scale (at most 1: the conditional branch only)")
     parser.add_argument("--size", type=int, default=DEFAULT_RESOLUTION, help=f"square image size in pixels (a multiple of {SIZE_MULTIPLE})")
     parser.add_argument("--seed", type=int, default=0, help="seed of the per-image noise")
@@ -63,6 +69,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model-id", default=None, help="the teacher model providing the VAE, scheduler and text encoders (default: the one the export records)")
     parser.add_argument("--hf-cache", default=None, help="Hugging Face hub cache (default: HF_HUB_CACHE)")
     args = parser.parse_args(argv)
+    if args.sigmas is not None:
+        try:
+            args.sigmas = check_sigmas(args.sigmas)
+        except ValueError as error:
+            parser.error(f"--sigmas: {error}")
+        if args.steps is not None and args.steps != len(args.sigmas):
+            parser.error(f"--steps {args.steps} conflicts with the {len(args.sigmas)} --sigmas (with --sigmas the step count is their number)")
+        args.steps = len(args.sigmas)
+    elif args.steps is None:
+        args.steps = DEFAULT_STEPS
     if min(args.K, args.steps, args.size, args.num_samples, args.micro_batch) < 1:
         parser.error("--K, --steps, --size, --num-samples and --micro-batch must be >= 1")
     if args.size % SIZE_MULTIPLE:
@@ -79,19 +95,23 @@ def main(argv: list[str] | None = None) -> int:
     encodings = encode_prompts(prompts, model_id, device, cache_dir=args.hf_cache)
     student = load_student(args.student, device=device, loop_rounds=args.K)
     vae, scheduler_factory = load_vae_and_scheduler_factory(model_id, device, cache_dir=args.hf_cache)
-    print(f"[generate] {len(prompts)} prompts x {args.num_samples} samples, K={args.K}, {args.steps} steps, CFG {args.cfg}, {args.size} px, "
+    schedule = f"{args.steps} steps" if args.sigmas is None else f"{args.steps} steps at sigmas {args.sigmas}"
+    print(f"[generate] {len(prompts)} prompts x {args.num_samples} samples, K={args.K}, {schedule}, CFG {args.cfg}, {args.size} px, "
           f"seed {args.seed}, device {device}", flush=True)
     results = generate_images(
         student, vae, scheduler_factory, encodings, loop_rounds=args.K, steps=args.steps, cfg_scale=args.cfg, resolution=args.size, seed=args.seed,
-        num_samples=args.num_samples, micro_batch_size=args.micro_batch, device=device,
+        num_samples=args.num_samples, micro_batch_size=args.micro_batch, device=device, sigmas=args.sigmas,
     )
     for p, s, image in results:
         image.save(out / f"{p:05d}_{s:02d}.png")
     (out / "prompts.txt").write_text("".join(f"{p}\n" for p in prompts), encoding="utf-8")
-    write_generation_record(out, {
+    record = {
         "student": read_student_metadata(args.student), "model_id": model_id, "K": args.K, "steps": args.steps, "cfg": args.cfg, "size": args.size,
         "seed": args.seed, "num_samples": args.num_samples, "micro_batch": args.micro_batch, "num_prompts": len(prompts),
-    })
+    }
+    if args.sigmas is not None:  # named only when given, so a record made without them keeps its bytes
+        record["sigmas"] = args.sigmas
+    write_generation_record(out, record)
     print(f"[generate] wrote {len(results)} images to {out} in {time.time() - started:.0f} s", flush=True)
     return 0
 
