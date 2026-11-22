@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "distill-to-loop"
+version = "0.1.0"
+description = "Distill SD3-medium into a looped, parameter-shared student whose loop count is chosen at sampling time"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.10"
+# The tested versions of requirements.txt (keep the two lists equal; tests/test_packaging.py checks it).
+dependencies = [
+    "torch==2.8.0",
+    "diffusers==0.40.0",
+    "transformers==5.17.0",
+    "accelerate==1.15.0",
+    "safetensors==0.8.0",
+    "huggingface_hub==1.30.0",
+    "numpy==2.4.6",
+    "Pillow==12.3.0",
+    "PyYAML==6.0.3",
+]
+
+[project.optional-dependencies]
+test = ["pytest==9.1.1"]
+wandb = ["wandb"]
+
+[tool.setuptools.packages.find]
+include = ["distill_to_loop*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
