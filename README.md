@@ -30,7 +30,7 @@ Results from the paper with SD3-medium as the teacher (28 sampling steps, CFG 7,
 | D2L | 92.6 | 8 | 0.648 | 0.889 | 22.278 | 0.275 | 99.3 |
 | D2L | 177.0 | 16 | 0.633 | 0.853 | 22.229 | 0.273 | 97.6 |
 
-The table is the plain distilled student, which the default config reproduces. The Hugging Face repository holds `d2l-sd3-medium` (the distilled student combined with a real-data continuation, the "Real data" rows of the paper) and `d2l-sd3-medium-turbo` (distilled from the CDM four-step teacher); see its model card.
+The table is the plain distilled student, which the default config reproduces. The Hugging Face repository holds `d2l-sd3-medium` and `d2l-sd3-medium-turbo`; see its model card.
 
 ## Getting Started
 
