@@ -101,7 +101,7 @@ GPUS=0,1 CONFIG=configs/sd3m_d2l.yaml OVERRIDE="data.train_dir=$WORK/coco2017_51
 
 `GPUS` lists the GPU indices. `OVERRIDE` takes space-separated `key.path=value` overrides of the YAML config. The per-GPU batch size is set with `train.per_gpu_batch_size` in `OVERRIDE`. The layouts that keep the 144 rows per step of the recipe are 1 x 144, 2 x 72, 3 x 48 and 6 x 24 (GPUs x per-GPU batch), for example `GPUS=0,1,2 ... train.per_gpu_batch_size=48`. Any other total changes the global batch size, and the trainer prints a `[train] WARNING: ... rows per step ...` at start-up. The rollout rows per GPU, `round(per_gpu_batch_size / 3)`, must be a positive multiple of the 8 rollout steps (for example 24, 48 or 72 rows per GPU); other values are refused. There is no gradient accumulation.
 
-The original run used 72 rows per GPU with round checkpointing (`train.loop_grad_checkpoint: true`) and peaked at 137.63 GiB per GPU, which is close to the capacity of 141 GB cards. Smaller cards need another layout or the flag `train.block_grad_checkpoint=true` (default `false`), which adds per-block activation checkpointing to reduce memory at the cost of more recomputation (its memory use was not measured). It gives the same numerical results and may be changed when resuming.
+The original run used 72 rows per GPU with round checkpointing (`train.loop_grad_checkpoint: true`) and peaked at 137.63 GiB per GPU, which is close to the capacity of 141 GB cards. Smaller cards need another layout or the flag `train.block_grad_checkpoint=true` (default `false`), which adds per-block activation checkpointing to reduce memory at the cost of more recomputation. On one H200 at 24 rows per GPU, the peak memory was 22.45 GiB with the flag and 56.50 GiB without it, at about 4.3 s and 3.5 s per step (the GPU was shared, so the timings are upper bounds). The flag gives bitwise the same results on the CPU (tested). On CUDA, training is not bit-reproducible from run to run, and the differences with the flag are of the same size as those between two runs without it. The flag may be changed when resuming.
 
 Checkpoints are written to `<output_dir>/<name>/step_XXXXXXXX.pt`. `output_dir` defaults to `./checkpoints`; point it to a disk with room, because each checkpoint takes about 12 GB and the last `train.keep_last` (default 10) are kept.
 
@@ -209,7 +209,7 @@ RuntimeError: cannot resume $WORK/checkpoints/smoke/step_00000003.pt into $WORK/
 
 If a resume under a new name with W&B enabled stops before its first checkpoint, it leaves a `wandb_run_id` file in that directory and the same command is then refused; use another name or remove that directory.
 
-A resumed run is exact only with `data.num_workers=0`. With data loader workers (the default is 8) the sample order is the same, but after a resume within an epoch the latents drawn from the stored VAE posteriors differ from those of the uninterrupted run.
+A resumed run is exact only with `data.num_workers=0` (checked on the CPU). With data loader workers (the default is 8) the sample order is the same, but after a resume within an epoch the latents drawn from the stored VAE posteriors differ from those of the uninterrupted run.
 
 ## Tests
 
