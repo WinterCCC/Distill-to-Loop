@@ -1,6 +1,6 @@
 # Distill to Loop: Turning Pretrained Diffusion Transformers into Looped Models with Adjustable Depth
 
-[![Project Page](https://img.shields.io/badge/Project-Page-blue)](<PROJECT_PAGE_URL>)
+[![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://winterccc.github.io/dooop)
 [![Model](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Distill--to--Loop-yellow)](https://huggingface.co/ShimaRinC/Distill-to-Loop)
 [![arXiv](https://img.shields.io/badge/arXiv-<ARXIV_ID>-b31b1b)](https://arxiv.org/abs/<ARXIV_ID>)
 
@@ -86,7 +86,7 @@ The launch must use the same config and number of GPUs as the run that wrote the
 
 ## 🔗 Related Links
 
-The model weights are at https://huggingface.co/ShimaRinC/Distill-to-Loop, the teacher model is at https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers, the project page is at <PROJECT_PAGE_URL>, and the paper is at https://arxiv.org/abs/<ARXIV_ID>.
+The model weights are at https://huggingface.co/ShimaRinC/Distill-to-Loop, the teacher model is at https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers, the project page is at https://winterccc.github.io/dooop, and the paper is at https://arxiv.org/abs/<ARXIV_ID>.
 
 ## 📄 License
 
