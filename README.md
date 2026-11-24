@@ -8,7 +8,7 @@ This repository distills SD3-medium into a looped student whose loop count is ch
 
 ## Abstract
 
-Looped transformers reuse one block of shared weights along the depth of the network. Recent looped diffusion transformers are trained from scratch, which repeats the full pretraining cost although strong pretrained non-looped diffusion transformers exist. We propose Distill to Loop (D2L), which distills a pretrained non-looped diffusion transformer into a looped student whose blocks are initialized from the teacher's. We cast distillation as a fixed-point iteration toward the teacher, in which the output after every loop is trained toward the teacher, and each loop is one step of an ordinary differential equation in depth. As a result, one model runs any number of loops at test time without retraining, and the higher-order ODE solvers of diffusion model sampling can be applied along the depth dimension for better results. Meanwhile, because a looped model produces an output after every loop, we also construct loop guidance between the outputs of different loop counts, which improves the generated samples at little extra compute. On SD3-medium, a looped student with about 37% of the teacher's parameters matches the teacher on average over GenEval, ImageReward, PickScore and HPSv2.1 with two to four loops, and with two loops it uses about 58% of the teacher's compute. And on a four-step SD3-medium, loop guidance raises the average of the four metrics from 88.2 to 99.2. This repository covers the SD3-medium distillation and adjustable-loop sampling; loop guidance and the higher-order depth solvers are not included.
+Looped transformers reuse one block of shared weights along the depth of the network. Recent looped diffusion transformers are trained from scratch, which repeats the full pretraining cost although strong pretrained non-looped diffusion transformers exist. We propose Distill to Loop (Dooop), which distills a pretrained non-looped diffusion transformer into a looped student whose blocks are initialized from the teacher's. We cast distillation as a fixed-point iteration toward the teacher, in which the output after every loop is trained toward the teacher, and each loop is one step of an ordinary differential equation in depth. As a result, one model runs any number of loops at test time without retraining, and the higher-order ODE solvers of diffusion model sampling can be applied along the depth dimension for better results. Meanwhile, because a looped model produces an output after every loop, we also construct loop guidance between the outputs of different loop counts, which improves the generated samples at little extra compute. On SD3-medium, a looped student with about 37% of the teacher's parameters matches the teacher on average over GenEval, ImageReward, PickScore and HPSv2.1 with two to four loops, and with two loops it uses about 58% of the teacher's compute. And on a four-step SD3-medium, loop guidance raises the average of the four metrics from 88.2 to 99.2. This repository covers the SD3-medium distillation and adjustable-loop sampling; loop guidance and the higher-order depth solvers are not included.
 
 ## 🚀 Getting Started
 
@@ -24,7 +24,7 @@ pip install -r requirements.txt
 | Asset | Link |
 |---|---|
 | SD3-medium teacher | https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers |
-| D2L student weights | https://huggingface.co/ShimaRinC/Distill-to-Loop |
+| Dooop student weights | https://huggingface.co/ShimaRinC/Distill-to-Loop |
 | COCO 2017 train images and captions | https://cocodataset.org/#download |
 
 SD3-medium is gated. Accept its license on the Hub, log in with `hf auth login`, and download it with `hf download stabilityai/stable-diffusion-3-medium-diffusers`.
@@ -99,7 +99,7 @@ The model weights on Hugging Face are derived from SD3-medium and are distribute
 ## 📚 Citation
 
 ```bibtex
-@article{d2l,
+@article{dooop,
   title   = {Distill to Loop: Turning Pretrained Diffusion Transformers into Looped Models with Adjustable Depth},
   journal = {arXiv preprint arXiv:<ARXIV_ID>},
   year    = {<YEAR>}
