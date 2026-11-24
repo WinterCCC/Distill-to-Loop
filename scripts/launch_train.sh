@@ -3,7 +3,7 @@
 #
 #   GPUS        comma-separated GPU indices (required), e.g. GPUS=0,1; GPUS=cpu runs on the CPU
 #   NPROC       ranks (default: the number of GPUs listed; 1 with GPUS=cpu)
-#   CONFIG      the YAML config (default: configs/sd3m_d2l.yaml)
+#   CONFIG      the YAML config (default: configs/sd3m_dooop.yaml)
 #   OVERRIDE    space-separated dotted overrides, e.g. OVERRIDE="data.train_dir=/data/coco/train train.max_steps=200"
 #               (no spaces inside one value: wandb.tags=[a,b])
 #   RESUME_FROM a checkpoint (step_XXXXXXXX.pt) to continue the run from
@@ -30,7 +30,7 @@ else
     export CUDA_VISIBLE_DEVICES="$GPUS"
     NPROC="${NPROC:-$(awk -F, '{print NF}' <<<"$GPUS")}"
 fi
-CONFIG="${CONFIG:-configs/sd3m_d2l.yaml}"
+CONFIG="${CONFIG:-configs/sd3m_dooop.yaml}"
 MASTER_PORT="${MASTER_PORT:-29541}"
 
 export PYTHONPATH="$ROOT_DIR${PYTHONPATH:+:$PYTHONPATH}"

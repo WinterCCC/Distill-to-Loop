@@ -40,7 +40,7 @@ torchrun --nproc_per_node=2 scripts/prepare_coco.py --images-root /path/to/coco/
 The reported setting uses 2 NVIDIA B200 GPUs with 72 samples per GPU, for 144 samples per step.
 
 ```bash
-GPUS=0,1 CONFIG=configs/sd3m_d2l.yaml OVERRIDE="data.train_dir=/path/to/coco2017_512/train" bash scripts/launch_train.sh
+GPUS=0,1 CONFIG=configs/sd3m_dooop.yaml OVERRIDE="data.train_dir=/path/to/coco2017_512/train" bash scripts/launch_train.sh
 ```
 
 `OVERRIDE` takes space-separated `key=value` overrides of the config, which is how to shorten a run or shrink the batch for a smoke test:
@@ -53,10 +53,10 @@ GPUS=0 OVERRIDE="data.train_dir=/path/to/coco2017_512/train train.max_steps=40 t
 
 ```bash
 python scripts/export_student.py --checkpoint /path/to/step_00100000.pt --out /path/to/exported
-python scripts/generate.py --student /path/to/d2l-sd3-medium --prompts prompts.txt --out out/ --K 4
+python scripts/generate.py --student /path/to/dooop-sd3-medium --prompts prompts.txt --out out/ --K 4
 ```
 
-`--K` sets the loop count at sampling time. The four-step `d2l-sd3-medium-turbo` is sampled with `--sigmas 1.0 0.75 0.5 0.25 --cfg 1.0`.
+`--K` sets the loop count at sampling time. The four-step `dooop-sd3-medium-turbo` is sampled with `--sigmas 1.0 0.75 0.5 0.25 --cfg 1.0`.
 
 ### 5. Inference in Python
 
@@ -65,7 +65,7 @@ import torch
 from huggingface_hub import snapshot_download
 from distill_to_loop import load_pipeline
 
-student_dir = snapshot_download("ShimaRinC/Distill-to-Loop") + "/d2l-sd3-medium"
+student_dir = snapshot_download("ShimaRinC/Distill-to-Loop") + "/dooop-sd3-medium"
 pipe = load_pipeline(student_dir, device="cuda")
 pipe.transformer.loop_rounds = 4
 image = pipe("a lighthouse on a cliff at sunset", num_inference_steps=28, guidance_scale=7.0, height=512, width=512,
@@ -78,7 +78,7 @@ The loop count is set with `pipe.transformer.loop_rounds`.
 ## 🔁 Resuming a Run
 
 ```bash
-GPUS=0,1 CONFIG=configs/sd3m_d2l.yaml RESUME_FROM=/path/to/checkpoints/<name>/step_<N>.pt \
+GPUS=0,1 CONFIG=configs/sd3m_dooop.yaml RESUME_FROM=/path/to/checkpoints/<name>/step_<N>.pt \
 OVERRIDE="data.train_dir=/path/to/coco2017_512/train" bash scripts/launch_train.sh
 ```
 

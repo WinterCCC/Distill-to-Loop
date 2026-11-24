@@ -12,7 +12,7 @@
 #
 # Disk: the prepared COCO 2017 train split (data.train_dir) takes about 182 GB (119 shards); every
 # training checkpoint takes about 12 GB, and train.keep_last of them are kept (about 120 GB at 10).
-name: sd3m_d2l
+name: sd3m_dooop
 seed: 0
 # Checkpoints go to <output_dir>/<name>/. The default is relative to the current directory, so with
 # scripts/launch_train.sh (which runs from the repository root) they land in ./checkpoints/ inside the

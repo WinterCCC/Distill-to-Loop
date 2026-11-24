@@ -8,15 +8,15 @@ after the resumed one is refused (resume an older checkpoint into a new run name
 Examples::
 
     # 2 GPUs, the released recipe
-    torchrun --nproc_per_node=2 scripts/train.py --config configs/sd3m_d2l.yaml data.train_dir=/path/to/coco2017_512/train
+    torchrun --nproc_per_node=2 scripts/train.py --config configs/sd3m_dooop.yaml data.train_dir=/path/to/coco2017_512/train
 
     # continue the run from its newest checkpoint
-    torchrun --nproc_per_node=2 scripts/train.py --config configs/sd3m_d2l.yaml data.train_dir=/path/to/coco2017_512/train \\
-        --resume-from checkpoints/sd3m_d2l/step_00050000.pt
+    torchrun --nproc_per_node=2 scripts/train.py --config configs/sd3m_dooop.yaml data.train_dir=/path/to/coco2017_512/train \\
+        --resume-from checkpoints/sd3m_dooop/step_00050000.pt
 
-    # continue from an older checkpoint in a new run directory (checkpoints/sd3m_d2l_from40k/)
-    torchrun --nproc_per_node=2 scripts/train.py --config configs/sd3m_d2l.yaml data.train_dir=/path/to/coco2017_512/train \\
-        name=sd3m_d2l_from40k --resume-from checkpoints/sd3m_d2l/step_00040000.pt
+    # continue from an older checkpoint in a new run directory (checkpoints/sd3m_dooop_from40k/)
+    torchrun --nproc_per_node=2 scripts/train.py --config configs/sd3m_dooop.yaml data.train_dir=/path/to/coco2017_512/train \\
+        name=sd3m_dooop_from40k --resume-from checkpoints/sd3m_dooop/step_00040000.pt
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ from distill_to_loop.training.trainer import run_training  # noqa: E402
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--config", default="configs/sd3m_d2l.yaml", help="the YAML config (schema: distill_to_loop.config.DistillConfig)")
+    parser.add_argument("--config", default="configs/sd3m_dooop.yaml", help="the YAML config (schema: distill_to_loop.config.DistillConfig)")
     parser.add_argument("--resume-from", default=None, metavar="CHECKPOINT",
                         help="continue the run from this checkpoint (step_XXXXXXXX.pt); the run directory must hold no later step")
     parser.add_argument("--device", choices=("auto", "cpu"), default="auto", help="'auto': the rank's GPU when CUDA is available; 'cpu': force the CPU")

@@ -19,7 +19,7 @@ from distill_to_loop.config import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-RELEASE_CONFIG = REPO_ROOT / "configs" / "sd3m_d2l.yaml"
+RELEASE_CONFIG = REPO_ROOT / "configs" / "sd3m_dooop.yaml"
 
 
 def test_yaml_equals_the_schema_defaults():

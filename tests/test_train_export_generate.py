@@ -33,7 +33,7 @@ def run(tmp_path: Path, monkeypatch):
     split = tiny.write_tiny_split(tmp_path / "data" / "train", n=40, text_dtype=torch.bfloat16)
 
     def config(max_steps: int):
-        return load_config(REPO_ROOT / "configs" / "sd3m_d2l.yaml", [
+        return load_config(REPO_ROOT / "configs" / "sd3m_dooop.yaml", [
             "name=smoke", f"output_dir={tmp_path / 'ckpt'}", f"data.train_dir={split}", "data.num_workers=0", f"model.teacher_transformer_path={teacher_dir}",
             "train.per_gpu_batch_size=24", f"train.max_steps={max_steps}", "train.checkpoint_every=1", "train.log_every=1", "train.keep_last=2",
         ])
@@ -59,7 +59,7 @@ def _tiny_encodings(n: int) -> dict[str, torch.Tensor]:
 
 
 def _load_generate_script():
-    module_spec = importlib.util.spec_from_file_location("d2l_generate_script", REPO_ROOT / "scripts" / "generate.py")
+    module_spec = importlib.util.spec_from_file_location("dooop_generate_script", REPO_ROOT / "scripts" / "generate.py")
     generate = importlib.util.module_from_spec(module_spec)
     module_spec.loader.exec_module(generate)
     return generate
@@ -141,7 +141,7 @@ def test_export_extra_metadata(run, tmp_path: Path):
 
 
 def test_export_script_metadata_flag(run, tmp_path: Path, capsys):
-    module_spec = importlib.util.spec_from_file_location("d2l_export_script", REPO_ROOT / "scripts" / "export_student.py")
+    module_spec = importlib.util.spec_from_file_location("dooop_export_script", REPO_ROOT / "scripts" / "export_student.py")
     export_script = importlib.util.module_from_spec(module_spec)
     module_spec.loader.exec_module(export_script)
     checkpoint = run(2).run_dir / "step_00000002.pt"

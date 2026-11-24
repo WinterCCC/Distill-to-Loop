@@ -16,7 +16,7 @@ from distill_to_loop.hub import explain_missing_model
 from distill_to_loop.inference import load_vae_and_scheduler_factory, teacher_transformer_config
 
 MODEL_ID = "stabilityai/stable-diffusion-3-medium-diffusers"
-RELEASE_CONFIG = Path(__file__).resolve().parents[1] / "configs" / "sd3m_d2l.yaml"
+RELEASE_CONFIG = Path(__file__).resolve().parents[1] / "configs" / "sd3m_dooop.yaml"
 
 
 def test_a_missing_teacher_explains_the_download(tmp_path: Path):

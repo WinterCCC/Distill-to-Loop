@@ -7,7 +7,7 @@ config (local Hugging Face cache); the checkpoint is memory-mapped and never mod
 
 Example::
 
-    python scripts/export_student.py --checkpoint checkpoints/sd3m_d2l/step_00100000.pt --out exported/sd3m_d2l_100k
+    python scripts/export_student.py --checkpoint checkpoints/sd3m_dooop/step_00100000.pt --out exported/sd3m_dooop_100k
 
 ``--metadata KEY=VALUE`` (repeatable) adds an entry to the file metadata, e.g. how the weights were averaged after training; the standard
 entries cannot be replaced.

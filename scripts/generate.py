@@ -8,7 +8,7 @@ sampling is FlowMatch Euler with CFG, the student running ``--K`` loop rounds; i
 
 Example::
 
-    python scripts/generate.py --student exported/sd3m_d2l_100k --prompts prompts.txt --out samples/ --K 4 --steps 28 --cfg 7.0 --size 512
+    python scripts/generate.py --student exported/sd3m_dooop_100k --prompts prompts.txt --out samples/ --K 4 --steps 28 --cfg 7.0 --size 512
 
 ``--sigmas`` replaces the scheduler's ``--steps``-point grid by a custom schedule (before the scheduler's shift; the step count is their
 number), e.g. a four-step student: ``--sigmas 1.0 0.75 0.5 0.25 --cfg 1.0``.

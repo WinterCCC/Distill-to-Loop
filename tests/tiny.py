@@ -16,7 +16,7 @@ from distill_to_loop.data.text import ATTN_MASK, POOLED, TEXT_EMB, shard_text_na
 C, H = 16, 8  # latent channels and spatial size
 SEQ, D, D_POOLED = 6, 8, 12  # text sequence length and widths
 SNAPSHOT = "tiny-snapshot"
-RELEASE_CONFIG = Path(__file__).resolve().parents[1] / "configs" / "sd3m_d2l.yaml"
+RELEASE_CONFIG = Path(__file__).resolve().parents[1] / "configs" / "sd3m_dooop.yaml"
 PER_GPU = 24  # 16 data rows + 8 rollout rows (1 trajectory x 8 Euler steps), the smallest batch of the recipe's rollout ratio
 
 

@@ -6,7 +6,7 @@ arrive as strings and are converted by the target type, so ``name=yes`` stays th
 Nested sections may also be given as a YAML mapping on the command line (``wandb={enabled: true}``); list fields take YAML flow lists
 (``wandb.tags=[a, b]``).
 
-The defaults are the released recipe (``configs/sd3m_d2l.yaml``): 2 pre + 5 shared x 4 + 2 post blocks initialized from SD3-medium, AdamW
+The defaults are the released recipe (``configs/sd3m_dooop.yaml``): 2 pre + 5 shared x 4 + 2 post blocks initialized from SD3-medium, AdamW
 1.732e-4 after a 500-step warm-up, 144 rows per step on 2 GPUs (72 per GPU: 48 data rows and 24 online rollout rows), 100,000 steps, EMA 0.9995.
 """
 
@@ -116,7 +116,7 @@ class EmaConfig:
 
 @dataclass
 class DistillConfig:
-    name: str = "sd3m_d2l"
+    name: str = "sd3m_dooop"
     seed: int = 0
     output_dir: str = "checkpoints"
     paths: PathsConfig = field(default_factory=PathsConfig)
