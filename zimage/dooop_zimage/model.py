@@ -16,7 +16,7 @@ Only ``n_pre + n_loop + n_post`` physical ``ZImageTransformerBlock`` instances e
 from every ``M / n_loop``-th teacher layer of the middle segment (``M = n_layers - n_pre - n_post``; for 3 + 6 + 3: layers 3, 7, 11, 15, 19,
 23), the pre blocks from layers ``0 .. n_pre - 1`` and the post blocks from the last ``n_post`` layers.
 
-The depth embedding ``e_s(s_k)`` (:class:`~distill_to_loop.models.looped_sd3.DepthEmbedding`, 256 wide, last layer zero at initialization) is
+The depth embedding ``e_s(s_k)`` (:class:`~dooop.models.looped_sd3.DepthEmbedding`, 256 wide, last layer zero at initialization) is
 added to the ``adaln_input`` the shared blocks read and nowhere else. The teacher's q and k RMSNorm layers are kept; no other attention option
 is added. At inference the depth grid is uniform, ``s_k = k / K``, so every round moves the tokens by ``1 / K`` of its update.
 
@@ -48,7 +48,7 @@ from diffusers.configuration_utils import register_to_config
 from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.transformers.transformer_z_image import ADALN_EMBED_DIM, ZImageTransformer2DModel, ZImageTransformerBlock
 
-from distill_to_loop.models.looped_sd3 import DepthEmbedding, _copy_module_, loop_step_weights, scale_round_update, stride_loop_sources
+from dooop.models.looped_sd3 import DepthEmbedding, _copy_module_, loop_step_weights, scale_round_update, stride_loop_sources
 
 DIFFUSERS_VERSION_WRITTEN_AGAINST = "0.40.0"  # the ZImageTransformer2DModel whose forward the student repeats
 # The constructor arguments of ZImageTransformer2DModel (the teacher's config fields), read off its signature so a student records every one.
@@ -166,7 +166,7 @@ class LoopedZImageTransformer(ZImageTransformer2DModel):
     ) -> "LoopedZImageTransformer":
         """A student with ``teacher``'s config, its weights copied from ``teacher`` (which is neither modified nor retained): the front end, head
         and pad tokens (:data:`COPIED_MODULES`, :data:`COPIED_PARAMETERS`), the pre blocks from layers ``0 .. n_pre - 1``, the post blocks from the
-        last ``n_post`` layers and the shared blocks from the layers :func:`~distill_to_loop.models.looped_sd3.stride_loop_sources` names. The
+        last ``n_post`` layers and the shared blocks from the layers :func:`~dooop.models.looped_sd3.stride_loop_sources` names. The
         depth embedder keeps its zero-initialized last layer."""
         config = {name: teacher.config[name] for name in TEACHER_CONFIG_FIELDS}
         num_layers = int(config["n_layers"])

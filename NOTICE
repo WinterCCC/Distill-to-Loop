@@ -10,9 +10,9 @@ This project includes code adapted from the following third-party components, ea
 Component Name: diffusers
 Source: https://github.com/huggingface/diffusers
 License: Apache-2.0 (License Text: LICENSE)
-Used in: distill_to_loop/models/attention.py (LoopedJointAttnProcessor repeats the operations of
+Used in: dooop/models/attention.py (LoopedJointAttnProcessor repeats the operations of
 diffusers 0.40.0's JointAttnProcessor2_0 and adds two optional operations) and
-distill_to_loop/models/looped_sd3.py (LoopedSD3Transformer subclasses diffusers'
+dooop/models/looped_sd3.py (LoopedSD3Transformer subclasses diffusers'
 SD3Transformer2DModel and follows its constructor and forward pass), and
 zimage/dooop_zimage/model.py (LoopedZImageTransformer subclasses diffusers'
 ZImageTransformer2DModel and repeats the text-to-image path of its forward pass). diffusers is
@@ -21,13 +21,13 @@ Copyright 2026 The HuggingFace Team. All rights reserved.
 zimage/dooop_zimage/model.py follows diffusers 0.40.0's
 models/transformers/transformer_z_image.py:
 Copyright 2025 Alibaba Z-Image Team and The HuggingFace Team. All rights reserved.
-distill_to_loop/models/looped_sd3.py follows diffusers 0.40.0's models/transformers/transformer_sd3.py:
+dooop/models/looped_sd3.py follows diffusers 0.40.0's models/transformers/transformer_sd3.py:
 Copyright 2025 Stability AI, The HuggingFace Team and The InstantX Team. All rights reserved.
 ----------------------------------------------------------------
 Component Name: Looped-DiT
 Source: https://github.com/OpenSenseNova/Looped-DiT
 License: MIT
-Used in: distill_to_loop/models/attention.py (exclusive_self_attention, adapted with a per-head
+Used in: dooop/models/attention.py (exclusive_self_attention, adapted with a per-head
 scale).
 
 MIT License

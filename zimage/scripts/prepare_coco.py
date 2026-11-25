@@ -6,7 +6,7 @@ the image is resized (short side) and center-cropped to ``--image-size``, encode
 stored in fp16; the dataset returns ``(z - 0.1159) * 0.3611``), and its caption is encoded by ``ZImagePipeline._encode_prompt`` (the Qwen3 text
 encoder in bf16, the chat template, the rows of the real tokens) and stored in bf16 in ``--stored-text-rows`` rows with its validity mask
 (``dooop_zimage.text``). A caption of more rows stops the run. The empty prompt's encoding (the caption-dropout target and the negative prompt)
-is stored next to them. Output layout: ``distill_to_loop.data.latents``. An annotation file with another image count than COCO 2017 train is
+is stored next to them. Output layout: ``dooop.data.latents``. An annotation file with another image count than COCO 2017 train is
 refused unless ``--allow-other-split`` is given (``--limit`` applies after this check).
 
 Multi-process: launch with ``torchrun``, one rank per GPU; rank ``r`` encodes the shards ``k`` with ``k % world_size == r``. A rerun skips the
@@ -34,8 +34,8 @@ import diffusers  # noqa: E402
 import torch  # noqa: E402
 import transformers  # noqa: E402
 
-from distill_to_loop.data.coco import CocoTrainSource, VaeImageEncoder, encode_shard  # noqa: E402
-from distill_to_loop.data.latents import (  # noqa: E402
+from dooop.data.coco import CocoTrainSource, VaeImageEncoder, encode_shard  # noqa: E402
+from dooop.data.latents import (  # noqa: E402
     INDEX_FILE,
     LatentIndex,
     has_shard_marker,
@@ -48,7 +48,7 @@ from distill_to_loop.data.latents import (  # noqa: E402
     write_shard,
     write_shard_marker,
 )
-from distill_to_loop.data.text import (  # noqa: E402
+from dooop.data.text import (  # noqa: E402
     POOLED,
     TEXT_EMB,
     encode_captions,
@@ -59,8 +59,8 @@ from distill_to_loop.data.text import (  # noqa: E402
     write_empty_prompt,
     write_shard_text,
 )
-from distill_to_loop.io_utils import atomic_write_text  # noqa: E402
-from distill_to_loop.training.distributed import barrier, cleanup, init_distributed  # noqa: E402
+from dooop.io_utils import atomic_write_text  # noqa: E402
+from dooop.training.distributed import barrier, cleanup, init_distributed  # noqa: E402
 from dooop_zimage.teacher import TEACHER_MODEL_ID, TEACHER_REVISION, teacher_dir  # noqa: E402
 from dooop_zimage.text import STORED_TEXT_ROWS, TEXT_MAX_SEQUENCE_LENGTH, ZImagePromptEncoder  # noqa: E402
 

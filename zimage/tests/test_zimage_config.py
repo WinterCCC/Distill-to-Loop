@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 import zimage_tiny as tiny
-from distill_to_loop.config import PLACEHOLDER, to_dict
+from dooop.config import PLACEHOLDER, to_dict
 from dooop_zimage.config import global_batch_warning, load_config, rollout_rows, validate_config
 
 

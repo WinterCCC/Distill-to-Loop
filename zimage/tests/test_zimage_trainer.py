@@ -9,7 +9,7 @@ import pytest
 import torch
 
 import zimage_tiny as tiny
-from distill_to_loop.data.text import EMPTY_PROMPT_FILE, load_empty_prompt, write_empty_prompt
+from dooop.data.text import EMPTY_PROMPT_FILE, load_empty_prompt, write_empty_prompt
 from dooop_zimage.teacher import CHECKPOINT_IDENTITY_KEY, TEACHER_REVISION
 from tests.tiny import assert_training_states_equal, read_payload
 

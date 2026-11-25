@@ -9,9 +9,9 @@ from typing import Any, Callable, Sequence
 import torch
 from diffusers.models.transformers.transformer_z_image import ZImageTransformer2DModel
 
-from distill_to_loop.data.latents import LatentIndex, num_shards, shard_name, shard_range, write_captions, write_index, write_meta, write_shard, write_shard_marker
-from distill_to_loop.data.text import ATTN_MASK, POOLED, TEXT_EMB, shard_text_name, write_empty_prompt, write_shard_text
-from distill_to_loop.training.distributed import DistInfo
+from dooop.data.latents import LatentIndex, num_shards, shard_name, shard_range, write_captions, write_index, write_meta, write_shard, write_shard_marker
+from dooop.data.text import ATTN_MASK, POOLED, TEXT_EMB, shard_text_name, write_empty_prompt, write_shard_text
+from dooop.training.distributed import DistInfo
 from dooop_zimage.teacher import TEACHER_REVISION
 
 TINY_TEACHER = dict(

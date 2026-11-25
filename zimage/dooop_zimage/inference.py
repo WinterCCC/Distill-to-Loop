@@ -8,7 +8,7 @@ The loop count ``K`` is the student's ``loop_rounds``.
 
 Sampling follows the evaluation protocol of the trained student: ``ZImagePipeline``'s own sigma grid (shift 6) with ``steps`` steps, CFG with the
 empty prompt as the negative, the initial noise of image ``(prompt p, sample s)`` a function of ``(seed, p, s)`` only
-(:func:`distill_to_loop.seeding.image_noise`), the prompts encoded once in chunks of :data:`ENCODE_CHUNK` with the empty prompt last, the captions
+(:func:`dooop.seeding.image_noise`), the prompts encoded once in chunks of :data:`ENCODE_CHUNK` with the empty prompt last, the captions
 in bf16, the VAE in bf16, and on CUDA the whole pipeline call (the fp32 student included) under bf16 autocast.
 
 Guidance convention. ``guidance_scale`` is ``ZImagePipeline``'s g, which combines ``pos + g (pos - neg)``: the usual CFG weight is
@@ -25,9 +25,9 @@ from typing import Any, Iterator, Mapping, Sequence
 import torch
 from safetensors.torch import load_file, save_file
 
-from distill_to_loop.inference import METADATA_KEY, WEIGHTS_NAME, read_student_metadata, write_generation_record  # noqa: F401 (re-exported)
-from distill_to_loop.seeding import image_noise
-from distill_to_loop.training.checkpoint import EMA_CHECKPOINT_KEY, read_checkpoint_payload
+from dooop.inference import METADATA_KEY, WEIGHTS_NAME, read_student_metadata, write_generation_record  # noqa: F401 (re-exported)
+from dooop.seeding import image_noise
+from dooop.training.checkpoint import EMA_CHECKPOINT_KEY, read_checkpoint_payload
 from dooop_zimage.model import TEACHER_CONFIG_FIELDS, LoopedZImageTransformer
 from dooop_zimage.teacher import CHECKPOINT_IDENTITY_KEY, TEACHER_MODEL_ID, TEACHER_REVISION, teacher_dir
 from dooop_zimage.text import ZImagePromptEncoder
@@ -217,7 +217,7 @@ def iter_images(
     output_type: str = "pil",
 ) -> Iterator[tuple[int, int, Any]]:
     """Yield ``(prompt index, sample index, image)`` for every prompt of ``encodings`` (:func:`encode_prompts`) and sample, prompt-major, as
-    soon as the pipeline call that makes it returns. Image ``(p, s)`` starts from :func:`~distill_to_loop.seeding.image_noise` of
+    soon as the pipeline call that makes it returns. Image ``(p, s)`` starts from :func:`~dooop.seeding.image_noise` of
     ``(seed, p, s)``. Every pipeline call has exactly ``micro_batch_size`` rows (a short last call is padded with copies of its last row, whose
     images are dropped), so the batch shape does not depend on the number of prompts. ``guidance_scale`` is the pipeline's g (module
     docstring). Yields PIL images, or latents with ``output_type="latent"``. Like any generator, it runs (and checks ``resolution``) only when

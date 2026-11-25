@@ -13,7 +13,8 @@ import pytest  # noqa: E402
 import torch  # noqa: E402
 
 ZIMAGE_ROOT = Path(__file__).resolve().parents[1]
-for _path in (ZIMAGE_ROOT.parent, ZIMAGE_ROOT, ZIMAGE_ROOT / "tests"):  # distill_to_loop, dooop_zimage, zimage_tiny
+# dooop, tests.tiny (the SD3 test helpers in sd3/tests), dooop_zimage, zimage_tiny
+for _path in (ZIMAGE_ROOT.parent, ZIMAGE_ROOT.parent / "sd3", ZIMAGE_ROOT, ZIMAGE_ROOT / "tests"):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 

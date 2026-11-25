@@ -24,7 +24,7 @@ from pathlib import Path
 ZIMAGE_ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ZIMAGE_ROOT), str(ZIMAGE_ROOT.parent)]
 
-from distill_to_loop.training.distributed import cleanup, init_distributed  # noqa: E402
+from dooop.training.distributed import cleanup, init_distributed  # noqa: E402
 from dooop_zimage.config import load_config  # noqa: E402
 from dooop_zimage.trainer import run_training  # noqa: E402
 

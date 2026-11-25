@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import torch
 
-import distill_to_loop
+import dooop
 import dooop_zimage
 import zimage_tiny as tiny
 from dooop_zimage.teacher import TEACHER_REVISION, scheduler_config, teacher_dir
@@ -35,6 +35,6 @@ def test_a_missing_snapshot_names_the_download_command(tmp_path):
 
 def test_packages_are_imported_from_this_checkout_and_tests_run_on_the_cpu():
     assert Path(dooop_zimage.__file__).resolve().is_relative_to(REPO_ROOT / "zimage")
-    assert Path(distill_to_loop.__file__).resolve().is_relative_to(REPO_ROOT)
+    assert Path(dooop.__file__).resolve().is_relative_to(REPO_ROOT)
     assert os.environ["CUDA_VISIBLE_DEVICES"] == ""
     assert not torch.cuda.is_available()

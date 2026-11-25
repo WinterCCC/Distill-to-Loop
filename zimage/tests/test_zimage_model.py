@@ -7,7 +7,7 @@ import pytest
 import torch
 
 import zimage_tiny as tiny
-from distill_to_loop.models.looped_sd3 import stride_loop_sources
+from dooop.models.looped_sd3 import stride_loop_sources
 from dooop_zimage.model import LoopedZImageTransformer, ZImageTeacherAdapter, caption_rows, image_list, model_time
 
 

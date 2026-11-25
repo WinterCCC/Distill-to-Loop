@@ -1,6 +1,6 @@
 """One training step's loss: the data rows, the online rollout rows and the trajectory loss on their union.
 
-The Z-Image specifics on top of :mod:`distill_to_loop.training` (whose trajectory loss and online rollout this module reuses unchanged):
+The Z-Image specifics on top of :mod:`dooop.training` (whose trajectory loss and online rollout this module reuses unchanged):
 
 * Sigmas of the data rows. Each data row draws its sigma uniformly from the 1000 training sigmas of the teacher's scheduler
   (``FlowMatchEulerDiscreteScheduler``, shift 6, no dynamic shifting), rounded to 7 significant digits (:func:`training_sigma_set`); the
@@ -12,9 +12,9 @@ The order of the operations (and so of the random draws) is:
 
 1. the ``n_data`` data rows are noised (``torch.randn_like``, then one ``torch.randint`` for the sigma indices, both on the global stream of
    the device);
-2. with online rollout rows, :func:`distill_to_loop.training.rollout.generate_online_rollout` (local generators only) on the prompts of the
+2. with online rollout rows, :func:`dooop.training.rollout.generate_online_rollout` (local generators only) on the prompts of the
    first ``n_trajectories`` data rows; its rows follow the data rows in the batch;
-3. :func:`distill_to_loop.training.objective.compute_trajectory_step_loss` on the whole batch.
+3. :func:`dooop.training.objective.compute_trajectory_step_loss` on the whole batch.
 """
 
 from __future__ import annotations
@@ -26,9 +26,9 @@ from typing import Any, Callable, Mapping, Sequence
 import torch
 from diffusers import FlowMatchEulerDiscreteScheduler
 
-from distill_to_loop.training.objective import StepLossResult, add_flow_noise, compute_trajectory_step_loss
-from distill_to_loop.training.rollout import RolloutGrid, generate_online_rollout, rollout_noise
-from distill_to_loop.training.step import RolloutStats
+from dooop.training.objective import StepLossResult, add_flow_noise, compute_trajectory_step_loss
+from dooop.training.rollout import RolloutGrid, generate_online_rollout, rollout_noise
+from dooop.training.step import RolloutStats
 from dooop_zimage.config import ZImageDistillConfig, rollout_rows
 
 SIGMA_SET_DIGITS = 7  # significant digits of the training sigmas, as recorded in the released run's config
@@ -127,7 +127,7 @@ def training_loss(
     ctx: StepContext, latents: torch.Tensor, prompt_embeds: torch.Tensor, pooled: torch.Tensor, rollout_index: int,
 ) -> tuple[StepLossResult, RolloutStats | None]:
     """The loss of one step (module docstring) on the ``n_data`` data rows (on the training device; ``pooled`` the captions' validity masks),
-    with the rollout ``rollout_index`` (:func:`distill_to_loop.training.rollout.online_rollout_index`). Returns the step result over every row and
+    with the rollout ``rollout_index`` (:func:`dooop.training.rollout.online_rollout_index`). Returns the step result over every row and
     the rollout's statistics (``None`` without online rollout rows)."""
     cfg = ctx.cfg
     if latents.shape[0] != ctx.n_data:

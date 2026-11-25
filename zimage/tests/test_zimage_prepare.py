@@ -12,8 +12,8 @@ import torch
 from PIL import Image
 
 import zimage_tiny as tiny
-from distill_to_loop.data.latents import LatentTextDataset, read_index
-from distill_to_loop.data.text import read_empty_prompt_manifest
+from dooop.data.latents import LatentTextDataset, read_index
+from dooop.data.text import read_empty_prompt_manifest
 from dooop_zimage.teacher import TEACHER_REVISION
 from dooop_zimage.text import ZImagePromptEncoder
 

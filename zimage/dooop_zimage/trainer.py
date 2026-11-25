@@ -3,7 +3,7 @@
 A run starts from the teacher: the student is built from the frozen bf16 teacher (:meth:`LoopedZImageTransformer.from_teacher`) and the EMA is
 seeded from its weights. Every step draws ``n_data`` rows per rank from the prepared split, adds the online rollout rows and takes the
 trajectory loss (:mod:`dooop_zimage.step`); then the gradient is clipped, AdamW steps, the EMA follows and the learning rate advances (linear
-warm-up, then constant). Checkpoints (:mod:`distill_to_loop.training.checkpoint`) hold the weights, the optimizer and scheduler states, the EMA,
+warm-up, then constant). Checkpoints (:mod:`dooop.training.checkpoint`) hold the weights, the optimizer and scheduler states, the EMA,
 the data position and the run's Z-Image identity (the teacher revision and the latent shape of the split, ``extra["zimage"]``), plus one RNG file
 per rank, so a resume (``resume_from``) continues where the uninterrupted run would be: exactly with ``data.num_workers=0``. With data loader
 workers the sample order is the same, but after a resume within an epoch the latents the workers draw from the stored VAE posteriors differ from
@@ -21,12 +21,12 @@ from typing import Any
 import diffusers
 import torch
 
-from distill_to_loop.config import lr_multiplier, to_dict
-from distill_to_loop.data.latents import LatentTextDataset
-from distill_to_loop.data.text import load_empty_prompt, read_empty_prompt_manifest, validate_empty_prompt
-from distill_to_loop.precision import text_dtype_for
-from distill_to_loop.seeding import seed_everything
-from distill_to_loop.training.checkpoint import (
+from dooop.config import lr_multiplier, to_dict
+from dooop.data.latents import LatentTextDataset
+from dooop.data.text import load_empty_prompt, read_empty_prompt_manifest, validate_empty_prompt
+from dooop.precision import text_dtype_for
+from dooop.seeding import seed_everything
+from dooop.training.checkpoint import (
     EMA_CHECKPOINT_KEY,
     check_resume,
     check_resume_target,
@@ -36,12 +36,12 @@ from distill_to_loop.training.checkpoint import (
     save_checkpoint,
     set_rng_state,
 )
-from distill_to_loop.training.data_iter import EpochProgress, resumable_batches
-from distill_to_loop.training.distributed import DistInfo, all_reduce_max, all_reduce_mean, wrap_for_ddp
-from distill_to_loop.training.ema import init_ema_state, read_ema_state_dict, update_ema_state
-from distill_to_loop.training.logger import create_logger
-from distill_to_loop.training.objective import MAX_REDUCED_METRICS
-from distill_to_loop.training.rollout import online_rollout_index
+from dooop.training.data_iter import EpochProgress, resumable_batches
+from dooop.training.distributed import DistInfo, all_reduce_max, all_reduce_mean, wrap_for_ddp
+from dooop.training.ema import init_ema_state, read_ema_state_dict, update_ema_state
+from dooop.training.logger import create_logger
+from dooop.training.objective import MAX_REDUCED_METRICS
+from dooop.training.rollout import online_rollout_index
 from dooop_zimage.config import ZImageDistillConfig, global_batch_warning, rollout_rows, validate_config
 from dooop_zimage.model import LoopedZImageTransformer, ZImageTeacherAdapter
 from dooop_zimage.step import build_step_context, training_loss
@@ -84,7 +84,7 @@ def build_optimizer(student: torch.nn.Module, cfg: ZImageDistillConfig) -> torch
 
 
 def build_lr_scheduler(optimizer: torch.optim.Optimizer, warmup_steps: int) -> torch.optim.lr_scheduler.LambdaLR:
-    """Linear warm-up over ``warmup_steps`` updates, then a constant learning rate (:func:`distill_to_loop.config.lr_multiplier`)."""
+    """Linear warm-up over ``warmup_steps`` updates, then a constant learning rate (:func:`dooop.config.lr_multiplier`)."""
 
     def lr_lambda(step: int) -> float:
         return lr_multiplier(step, warmup_steps)

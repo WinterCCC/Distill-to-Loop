@@ -6,7 +6,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from distill_to_loop.data.text import ATTN_MASK, POOLED, TEXT_EMB
+from dooop.data.text import ATTN_MASK, POOLED, TEXT_EMB
 from dooop_zimage.inference import ENCODE_CHUNK, encode_prompts
 from dooop_zimage.text import ZImagePromptEncoder
 from zimage_tiny import TEXT_PIPE_WIDTH as WIDTH, FakeTextPipe as _Pipe

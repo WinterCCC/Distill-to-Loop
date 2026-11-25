@@ -1,5 +1,5 @@
 # The versions this release was tested with (CPU tests and smoke runs; training of the released model used
-# the same versions on CUDA). diffusers is pinned exactly: distill_to_loop/models/attention.py repeats the
+# the same versions on CUDA). diffusers is pinned exactly: dooop/models/attention.py repeats the
 # attention processor of this diffusers version and refuses any other one.
 torch==2.8.0
 diffusers==0.40.0

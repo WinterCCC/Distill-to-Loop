@@ -1,7 +1,7 @@
-"""The Z-Image training configuration: typed dataclasses on the YAML loading and dotted overrides of :mod:`distill_to_loop.config`.
+"""The Z-Image training configuration: typed dataclasses on the YAML loading and dotted overrides of :mod:`dooop.config`.
 
 ``load_config(path, overrides)`` reads a YAML mapping, applies ``key.subkey=value`` overrides and builds :class:`ZImageDistillConfig`, with the
-type rules of :func:`distill_to_loop.config.from_dict` (unknown keys raise).
+type rules of :func:`dooop.config.from_dict` (unknown keys raise).
 
 The defaults are the released recipe (``zimage/configs/zimage_dooop.yaml``): 3 pre + 6 shared x 4 + 3 post blocks initialized from
 Z-Image, AdamW 1.414e-4 after a 500-step warm-up, 96 rows per step on 2 GPUs (48 per GPU: 32 data rows and 16 online rollout rows), 20,000
@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 
-from distill_to_loop.config import (
+from dooop.config import (
     PLACEHOLDER,
     DataConfig,
     EmaConfig,
@@ -33,7 +33,7 @@ from distill_to_loop.config import (
     online_rollout_split,
     recipe_layouts,
 )
-from distill_to_loop.config import validate_config as validate_shared_fields
+from dooop.config import validate_config as validate_shared_fields
 from dooop_zimage.teacher import TEACHER_REVISION
 
 RECIPE_GLOBAL_BATCH = 96  # rows per optimizer step of the released run (2 GPUs x 48); the learning rate and the other settings are tuned for it
@@ -85,7 +85,7 @@ def load_config(path: str | Path | None = None, overrides: Iterable[str] = ()) -
 
 def validate_config(cfg: ZImageDistillConfig) -> None:
     """Raise ``ValueError`` on an unset path or an inconsistent value, before any model is built (the checks of
-    :func:`distill_to_loop.config.validate_config` on the fields the two configs share, plus the Z-Image ones)."""
+    :func:`dooop.config.validate_config` on the fields the two configs share, plus the Z-Image ones)."""
     if cfg.data.train_dir == PLACEHOLDER:
         raise ValueError("data.train_dir is not set: pass data.train_dir=<a split directory written by zimage/scripts/prepare_coco.py>")
     if not cfg.model.teacher_revision:
@@ -94,7 +94,7 @@ def validate_config(cfg: ZImageDistillConfig) -> None:
 
 
 def rollout_rows(cfg: ZImageDistillConfig) -> tuple[int, int, int]:
-    """``(n_data, n_rollout, n_trajectories)`` of one per-GPU batch (:func:`distill_to_loop.config.online_rollout_split`)."""
+    """``(n_data, n_rollout, n_trajectories)`` of one per-GPU batch (:func:`dooop.config.online_rollout_split`)."""
     return online_rollout_split(cfg.train.per_gpu_batch_size, cfg.online_rollout.ratio, cfg.online_rollout.steps)
 
 

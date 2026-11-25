@@ -17,7 +17,7 @@ from typing import Sequence
 
 import torch
 
-from distill_to_loop.data.text import ATTN_MASK, POOLED, TEXT_EMB
+from dooop.data.text import ATTN_MASK, POOLED, TEXT_EMB
 
 TEXT_MAX_SEQUENCE_LENGTH = 512  # ZImagePipeline's max_sequence_length: the tokens the pipeline keeps at most
 STORED_TEXT_ROWS = 128  # rows stored per caption in the training cache (the chat-templated COCO train captions take 15 to 72 tokens)
