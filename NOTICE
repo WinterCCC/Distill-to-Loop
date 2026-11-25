@@ -13,9 +13,16 @@ License: Apache-2.0 (License Text: LICENSE)
 Used in: distill_to_loop/models/attention.py (LoopedJointAttnProcessor repeats the operations of
 diffusers 0.40.0's JointAttnProcessor2_0 and adds two optional operations) and
 distill_to_loop/models/looped_sd3.py (LoopedSD3Transformer subclasses diffusers'
-SD3Transformer2DModel and follows its constructor and forward pass). diffusers is also a runtime
-dependency (pipelines, schedulers, model classes).
+SD3Transformer2DModel and follows its constructor and forward pass), and
+zimage/dooop_zimage/model.py (LoopedZImageTransformer subclasses diffusers'
+ZImageTransformer2DModel and repeats the text-to-image path of its forward pass). diffusers is
+also a runtime dependency (pipelines, schedulers, model classes).
 Copyright 2026 The HuggingFace Team. All rights reserved.
+zimage/dooop_zimage/model.py follows diffusers 0.40.0's
+models/transformers/transformer_z_image.py:
+Copyright 2025 Alibaba Z-Image Team and The HuggingFace Team. All rights reserved.
+distill_to_loop/models/looped_sd3.py follows diffusers 0.40.0's models/transformers/transformer_sd3.py:
+Copyright 2025 Stability AI, The HuggingFace Team and The InstantX Team. All rights reserved.
 ----------------------------------------------------------------
 Component Name: Looped-DiT
 Source: https://github.com/OpenSenseNova/Looped-DiT
@@ -54,5 +61,13 @@ Medium weights (stabilityai/stable-diffusion-3-medium-diffusers) from the Huggin
 weights, and any weights derived from them (including student weights trained or exported with this
 code), are not covered by the Apache License of this repository; they are subject to the license of
 stabilityai/stable-diffusion-3-medium as stated on its model card
-(https://huggingface.co/stabilityai/stable-diffusion-3-medium). Data from COCO 2017
-(https://cocodataset.org) is subject to its own terms of use.
+(https://huggingface.co/stabilityai/stable-diffusion-3-medium).
+
+The Z-Image code in zimage/ loads the Z-Image weights (Tongyi-MAI/Z-Image at revision
+04cc4abb7c5069926f75c9bfde9ef43d49423021: transformer, VAE, Qwen3 text encoder and tokenizer) from
+the Hugging Face Hub. These weights, and any weights derived from them (including student weights
+trained or exported with this code), are subject to the license of Tongyi-MAI/Z-Image as stated on
+its model card (https://huggingface.co/Tongyi-MAI/Z-Image; the model card metadata at that
+revision names apache-2.0).
+
+Data from COCO 2017 (https://cocodataset.org) is subject to its own terms of use.

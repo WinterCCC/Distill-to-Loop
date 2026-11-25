@@ -1,0 +1,83 @@
+# The released Z-Image recipe: Tongyi-MAI/Z-Image distilled into a looped student of 3 pre + 6 shared x 4 + 3 post blocks
+# (schema: dooop_zimage.config.ZImageDistillConfig). Paths marked PLACEHOLDER must be set, here or on the command line
+# (for example data.train_dir=/path/to/zimage_coco2017_512/train).
+#
+# The student starts from the teacher: pre blocks = teacher layers 0-2, shared blocks = layers 3, 7, 11, 15, 19, 23, post blocks =
+# layers 27-29. Each data row draws its sigma uniformly from the 1000 training sigmas of the teacher's scheduler (shift 6); a third of
+# the rows are online rollout states (8 Euler steps on the pipeline's grid, the velocity CFG_w(v_T) + (wc - 1)(v_T,c - v_S,c)).
+#
+# CFG convention: online_rollout.teacher_cfg_scale w combines neg + w (pos - neg); ZImagePipeline's guidance_scale g combines
+# pos + g (pos - neg), so w = g + 1 (w = 5 is the pipeline's guidance 4).
+#
+# Global batch: 96 rows per step = 2 GPUs x 48 rows; per GPU 32 data rows and 16 online rollout rows (2 trajectories x 8 Euler steps).
+# The released run used 133-135 GB of memory per GPU on NVIDIA H200 cards.
+# There is no gradient accumulation, so the global batch is GPUs x per_gpu_batch_size. Layouts that keep 96 rows per step
+# (GPUs x per_gpu_batch_size): 2x48, 4x24. Other layouts train with another batch (the trainer prints a warning). The rollout
+# rows per GPU, round(per_gpu_batch_size * online_rollout.ratio), must be a positive multiple of the 8 rollout steps
+# (online_rollout.steps), e.g. 24 or 48 rows per GPU; otherwise the trainer stops with an error.
+#
+# Disk: every training checkpoint takes about 46 GB (the fp32 weights, the EMA and the two AdamW moments of the 2.90 B-parameter
+# student), and train.keep_last of them are kept (about 140 GB at 3).
+name: zimage_dooop
+seed: 0
+# Checkpoints go to <output_dir>/<name>/. The default is relative to the current directory, so with zimage/scripts/launch_train.sh
+# (which runs from the repository root) they land in ./checkpoints/ inside the repository (ignored by git). Point output_dir to a
+# disk with room for keep_last x 46 GB.
+output_dir: checkpoints
+
+paths:
+  hf_cache: null                 # Hugging Face hub cache of the teacher (null: HF_HUB_CACHE or the default cache)
+
+wandb:
+  enabled: false                 # optional Weights & Biases logging
+  project: dooop-zimage
+  entity: null
+  tags: []
+  notes: ""
+
+model:
+  teacher_revision: 04cc4abb7c5069926f75c9bfde9ef43d49423021   # the snapshot of Tongyi-MAI/Z-Image (teacher, VAE, text encoder)
+  n_pre: 3
+  n_loop: 6
+  n_post: 3
+  n_rounds: 4
+
+data:
+  train_dir: PLACEHOLDER         # written by zimage/scripts/prepare_coco.py (COCO 2017 train at 512 px)
+  # A resume reproduces the uninterrupted run exactly only with num_workers: 0. With workers the sample
+  # order is the same, but after a resume within an epoch the latents drawn from the stored VAE
+  # posteriors differ from those of the uninterrupted run.
+  num_workers: 8
+
+optim:
+  lr: 1.414e-4
+  beta1: 0.9
+  beta2: 0.999
+  weight_decay: 0.0
+  warmup_steps: 500
+  grad_clip: 1.0
+
+loss:
+  cfg_dropout_p: 0.1             # every row (data and rollout); a dropped row's target is the teacher's empty-prompt velocity
+  prelude_weight: 0.1
+
+train:
+  per_gpu_batch_size: 48         # see the layouts above
+  max_steps: 20000
+  checkpoint_every: 1000
+  keep_last: 3                   # checkpoints kept in the run directory, about 46 GB each
+  log_every: 10
+  dist_timeout_minutes: 120
+  # Activation checkpointing (memory only: the losses and gradients are the same with and without it).
+  # The released run trained with per-block checkpointing of every transformer block and 48 rows per GPU.
+  loop_grad_checkpoint: false    # recompute each loop round's shared blocks in the backward pass
+  block_grad_checkpoint: true    # recompute each transformer block in the backward pass
+
+online_rollout:
+  ratio: 0.333333
+  steps: 8
+  mix_w: 2.0                     # wc
+  teacher_cfg_scale: 5.0         # w of neg + w (pos - neg)
+
+ema:
+  decay: 0.9995
