@@ -2,7 +2,7 @@
 
 [![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://winterccc.github.io/dooop)
 [![Model](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Distill--to--Loop-yellow)](https://huggingface.co/ShimaRinC/Distill-to-Loop)
-[![arXiv](https://img.shields.io/badge/arXiv-<ARXIV_ID>-b31b1b)](https://arxiv.org/abs/<ARXIV_ID>)
+[![arXiv](https://img.shields.io/badge/arXiv-2611.31977-b31b1b)](https://arxiv.org/abs/2611.31977)
 
 This repository distills SD3-medium into a looped student whose loop count is chosen at sampling time, and it generates images from the result.
 
@@ -86,7 +86,7 @@ The launch must use the same config and number of GPUs as the run that wrote the
 
 ## 🔗 Related Links
 
-The model weights are at https://huggingface.co/ShimaRinC/Distill-to-Loop, the teacher model is at https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers, the project page is at https://winterccc.github.io/dooop, and the paper is at https://arxiv.org/abs/<ARXIV_ID>.
+The model weights are at https://huggingface.co/ShimaRinC/Distill-to-Loop, the teacher model is at https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers, the project page is at https://winterccc.github.io/dooop, and the paper is at https://arxiv.org/abs/2611.31977.
 
 ## 📄 License
 
@@ -100,9 +100,10 @@ The model weights on Hugging Face are derived from SD3-medium and are distribute
 
 ```bibtex
 @article{dooop,
+  author  = {Wang, Chenru and An, Shengwei},
   title   = {Distill to Loop: Turning Pretrained Diffusion Transformers into Looped Models with Adjustable Depth},
-  journal = {arXiv preprint arXiv:<ARXIV_ID>},
-  year    = {<YEAR>}
+  journal = {arXiv preprint arXiv:2611.31977},
+  year    = {2026}
 }
 ```
 
